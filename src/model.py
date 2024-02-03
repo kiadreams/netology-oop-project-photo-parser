@@ -13,7 +13,6 @@ class Model():
         self.yd_api = YDAPIClient(token_yd)
         self.albums = {}
         self.photos = {}
-        # self.ph_names = []
         self.yd_fld_name = None
 
     def vk_ld_all_albums(self):
@@ -70,8 +69,13 @@ class Model():
     def yd_upld_vk_phs(self):
         if self.yd_fld_name is None:
             self.yd_fld_name = self.yd_create_dir()
-        else:
-            for ph_name, ph_data in self.photos.items():
-                ph_url = ph_data.get('sizes', {}).get('url')
-                self.yd_api.post_upload_photo(self.yd_fld_name, ph_url)
-                print(f'Файл {ph_name} сохранен...')
+        for ph_name, ph_data in self.photos.items():
+            ph_url = ph_data.get('sizes', {}).get('url')
+            path = f'{self.yd_fld_name}/{ph_name}'
+            operation = self.yd_api.post_upload_photo(path, ph_url)
+            print(operation)
+            print()
+            print(f'Файл {ph_name} сохранен...')
+
+    def yd_status_operation(self):
+        pass

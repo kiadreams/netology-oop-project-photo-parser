@@ -1,4 +1,3 @@
-import pprint
 import requests
 
 
@@ -51,28 +50,25 @@ class YDAPIClient():
     BASE_YD_URL = 'https://cloud-api.yandex.net/v1/disk/'
     
     def __init__(self, token_yd) -> None:
-        self.token = token_yd
+        self.headers = {'Accept': 'application/json',
+                        'Authorization': token_yd}
     
     def get_disk_info(self) -> dict:
-        headers = {'Accept': 'application/json', 'Authorization': self.token}
-        return requests.get(self.BASE_YD_URL, headers=headers).json()
+        return requests.get(self.BASE_YD_URL, headers=self.headers).json()
     
     def get_info_recources(self, path, limit) -> dict:
         url = f'{self.BASE_YD_URL}resources'
         params = {'path': path, 'limit': limit}
-        headers = {'Accept': 'application/json', 'Authorization': self.token}
-        return requests.get(url, params=params, headers=headers).json()
+        return requests.get(url, params=params, headers=self.headers).json()
     
     def put_new_dir(self, path='/') -> dict:
         url = f'{self.BASE_YD_URL}resources'
         params = {'path': path}
-        headers = {'Accept': 'application/json', 'Authorization': self.token}
-        resp = requests.put(url, params=params, headers=headers)
+        resp = requests.put(url, params=params, headers=self.headers)
         return resp.json()
     
     def post_upload_photo(self, path: str, file_url: str) -> dict:
         url = f'{self.BASE_YD_URL}resources/upload'
         params = {'path': path, 'url': file_url}
-        headers = {'Accept': 'application/json', 'Authorization': self.token}
-        resp = requests.post(url, params=params, headers=headers)
-        return resp.json()
+        resp = requests.post(url, params=params, headers=self.headers)
+        return resp.status_code, resp.json()
