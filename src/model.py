@@ -78,6 +78,12 @@ class Model():
                 print(operation)
                 print(f'Файл {ph_name} сохранен...')
             self.photos.clear()
+    
+    def checking_connect(self):
+        yd_status = self.yd_api.get_disk_info()[0]
+        vk_status = self.vk_api.get_albums_count()[0]
+        print(vk_status, yd_status)
+        return yd_status == vk_status == 200
 
     def yd_status_operation(self):
         pass
@@ -94,3 +100,5 @@ class Model():
                 name += item.get('id')
                 ph_name = f'{name}.{f_exten}'
         return ph_name
+    
+    

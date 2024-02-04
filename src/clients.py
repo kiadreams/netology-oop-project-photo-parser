@@ -17,7 +17,14 @@ class VKAPIClient():
         self.user_id = user_id
         self.version_vk_api = version_vk_api
         self.params = {'access_token': self.token, 'v': self.version_vk_api}
-        
+    
+    def get_albums_count(self):
+        params = {'user_id': self.user_id,
+                   **self.params}
+        resp = requests.get(f'{self.BASE_VK_URL}photos.getAlbumsCount', params)
+        return resp.status_code, resp.json()
+
+    
     def get_all_photo(self, extended=True, photo_sizes=False) -> tuple:
         params  = {'extended': extended,
                    'photo_sizes': photo_sizes,
@@ -52,8 +59,9 @@ class YDAPIClient():
         self.headers = {'Accept': 'application/json',
                         'Authorization': token_yd}
     
-    def get_disk_info(self) -> dict:
-        return requests.get(self.BASE_YD_URL, headers=self.headers).json()
+    def get_disk_info(self) -> tuple:
+        resp = requests.get(self.BASE_YD_URL, headers=self.headers)
+        return resp.status_code, resp.json
     
     def get_info_recources(self, path, limit) -> dict:
         url = f'{self.BASE_YD_URL}resources'
