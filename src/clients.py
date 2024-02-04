@@ -1,5 +1,7 @@
 import requests
 
+from urllib.parse import urlencode
+
 
 # https://<адрес-сервера>/method/<имя-API-метода>?<параметры>
 # api.vk.com
@@ -7,42 +9,39 @@ import requests
 # photos.get
 class VKAPIClient():
     BASE_VK_URL = 'https://api.vk.com/method/'
-    VERSION_VK_API = '5.199'
     
-    def __init__(self, token_vk: str, user_id: str) -> None:
-        self.token = token_vk
-        self.user_id = str(user_id)
+    def __init__(self, access_token_vk: str,
+                 user_id: str,
+                 version_vk_api='5.199') -> None:
+        self.token = access_token_vk
+        self.user_id = user_id
+        self.version_vk_api = version_vk_api
+        self.params = {'access_token': self.token, 'v': self.version_vk_api}
         
     def get_all_photo(self, extended=True, photo_sizes=False) -> tuple:
-        method = 'photos.getAll'
-        some_params  = {
-            'extended': extended,
-            'photo_sizes': photo_sizes,
-            }
-        return self.__execute_request(method, some_params)
+        params  = {'extended': extended,
+                   'photo_sizes': photo_sizes,
+                   **self.params}
+        resp = requests.get(f'{self.BASE_VK_URL}photos.getAll', params)
+        return resp.status_code, resp.json()
         
-    def get_photos_from_album(self, album_id, photo_sizes=True,
+    def get_photos_from_album(self, album_id: int,
+                              photo_sizes=True,
                               extended=True) -> tuple:
-        method = 'photos.get'
-        some_params = {
-            'owner_id': self.user_id,
-            'album_id': album_id,
-            'photo_sizes': photo_sizes,
-            'extended': extended,
-        }
-        return self.__execute_request(method, some_params)
+        params = {'owner_id': self.user_id,
+                  'album_id': album_id,
+                  'photo_sizes': photo_sizes,
+                  'extended': extended,
+                  **self.params}
+        resp = requests.get(f'{self.BASE_VK_URL}photos.get', params)
+        return resp.status_code, resp.json()
     
-    def get_photo_albums(self) -> tuple:
-        method = 'photos.getAlbums'
-        some_params = {
-            'owner_id': self.user_id,
-        }
-        return self.__execute_request(method, some_params)
-        
-    def __execute_request(self, method: str, some_params: dict) -> tuple:
-        some_params.update({'access_token': self.token,
-                            'v': self.VERSION_VK_API})
-        resp = requests.get(f'{self.BASE_VK_URL}{method}', some_params)
+    def get_photo_albums(self, need_system=True, need_covers=True) -> tuple:
+        params = {'owner_id': self.user_id,
+                  'need_system': need_system,
+                  'need_covers': need_covers,
+                  **self.params}
+        resp = requests.get(f'{self.BASE_VK_URL}photos.getAlbums', params)
         return resp.status_code, resp.json()
 
 
@@ -65,10 +64,30 @@ class YDAPIClient():
         url = f'{self.BASE_YD_URL}resources'
         params = {'path': path}
         resp = requests.put(url, params=params, headers=self.headers)
-        return resp.json()
+        return resp.status_code, resp.json()
     
     def post_upload_photo(self, path: str, file_url: str) -> dict:
         url = f'{self.BASE_YD_URL}resources/upload'
         params = {'path': path, 'url': file_url}
         resp = requests.post(url, params=params, headers=self.headers)
         return resp.status_code, resp.json()
+
+
+if __name__ == '__main__':
+    
+    client_id = 51843385
+    base_url = 'https://oauth.vk.com/authorize'
+    
+    
+    def get_request_string(vk_url: str, app_id: int) -> str:
+        vk_params = {
+            'client_id': app_id,
+            'redirect_uri': 'https://oauth.vk.com/blank.html',
+            'display': 'page',
+            'scope': 6,
+            'response_type': 'token'
+        }
+        return f'{vk_url}?{urlencode(vk_params)}'
+
+
+    print(get_request_string(base_url, client_id))

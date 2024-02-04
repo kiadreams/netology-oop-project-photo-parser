@@ -1,5 +1,4 @@
-from urllib.parse import urlencode
-import requests
+from view.controller import Controller
 from src.model import Model
 from security.get_token import TOKEN_VK, TOKEN_YD, CLIENT_ID_VK
 
@@ -7,13 +6,20 @@ from security.get_token import TOKEN_VK, TOKEN_YD, CLIENT_ID_VK
 # base_url = 'https://oauth.vk.com/authorize'
 
 
-model = Model(TOKEN_VK, CLIENT_ID_VK, TOKEN_YD)
-# print('Все альбомы!')
-# model.ld_all_albums()
-# print('\nА теперь все фотографии!')
-model.vk_ld_ph_from_alb()
-print()
-model.yd_upld_vk_phs()
+
+
+# model = Model(TOKEN_VK, CLIENT_ID_VK, TOKEN_YD)
+
+app = Controller()
+view = app.window
+view.mainloop()
+
+
+# # print('Все альбомы!')
+# model.vk_ld_all_albums()
+# # print('\nА теперь все фотографии!')
+# for album in model.albums:
+#     model.yd_upld_vk_phs(album_id=album)
 # print('\n')
 # print(model.ph_names)
 # for name in model.photo_names:
