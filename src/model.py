@@ -1,7 +1,6 @@
-from os import name
 import requests
-from datetime import datetime as dt
 
+from datetime import datetime as dt
 from pprint import pprint
 
 from src.clients import VKAPIClient, YDAPIClient
@@ -12,11 +11,23 @@ class Model():
     def __init__(self, token_vk, client_id_vk, token_yd) -> None:
         self.vk_api = VKAPIClient(token_vk, client_id_vk)
         self.yd_api = YDAPIClient(token_yd)
+        self.is_working = False
         self.albums = {}
         self.photos = {}
+        self.album_names = {}
         self.yd_folder = 'Копии фото VK'
 
-    def vk_ld_all_albums(self):
+    def get_album_names(self):
+        self._vk_ld_all_albums()
+        album_names = {name: album.get('size', 0)
+                       for album in self.albums.values()
+                       if (name := album.get('title', ''))}
+        if album_names:
+            album_names.update({'ВСЕ АЛЬБОМЫ': sum(album_names.values())})
+        self.album_names = album_names
+        return list(self.album_names.keys())
+
+    def _vk_ld_all_albums(self):
         code, resp = self.vk_api.get_photo_albums()
         if code == 200 and resp.get('response', {}):
             for item in resp.get('response', {}).get('items', []):
@@ -27,15 +38,15 @@ class Model():
             pprint(resp)
         else:
             print(f'Запрос не удался, код ответа: {code}')
-    
+
     def vk_ld_ph_from_alb(self, album_id=-6):
         code, resp = self.vk_api.get_photos_from_album(album_id)
         if code == 200 and resp.get('response', {}):
             for item in resp.get('response', {}).get('items', []):
                 item['sizes'] = max(
                     item.get('sizes', []),
-                    key=lambda x: (x.get('height'),x.get('width'))
-                    )
+                    key=lambda x: (x.get('height'), x.get('width'))
+                )
                 ph_name = self.__get_file_name(item)
                 self.photos.setdefault(ph_name, item)
                 # pprint(self.photos)
@@ -51,13 +62,13 @@ class Model():
             with open(f'{photo_name}.jpg', 'wb') as f:
                 f.write(resp.content)
                 print('файл записан')
-    
+
     def yd_ld_disk_info(self):
         pprint(self.yd_api.get_disk_info())
-    
+
     def yd_ld_resource_info(self, path='/', limit=20):
         pprint(self.yd_api.get_info_recources(path, limit))
-        
+
     def yd_crt_dir(self, path: str, name: str) -> str:
         resp = self.yd_api.put_new_dir(path=path + name)
         # print(resp)
@@ -78,12 +89,16 @@ class Model():
                 print(operation)
                 print(f'Файл {ph_name} сохранен...')
             self.photos.clear()
-    
+
     def checking_connect(self):
-        yd_status = self.yd_api.get_disk_info()[0]
-        vk_status = self.vk_api.get_albums_count()[0]
-        print(vk_status, yd_status)
-        return yd_status == vk_status == 200
+        vk_is_connect = self.vk_api.get_albums_count()
+        yd_is_connect = self.yd_api.get_disk_info()
+        vk_status = vk_is_connect[1].get('response', {})
+        yd_status = yd_is_connect[0] == 200
+        if vk_status and yd_status:
+            self.is_working = True
+        print(vk_is_connect, yd_is_connect)
+        return vk_status, yd_status
 
     def yd_status_operation(self):
         pass
@@ -100,5 +115,3 @@ class Model():
                 name += item.get('id')
                 ph_name = f'{name}.{f_exten}'
         return ph_name
-    
-    

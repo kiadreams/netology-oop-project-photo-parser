@@ -1,22 +1,23 @@
 from view.controller import Controller
-from src.model import Model
-from security.get_token import TOKEN_VK, TOKEN_YD, CLIENT_ID_VK
+
+# from src.model import Model
+# from pprint import pprint
+# from security.get_token import TOKEN_VK, TOKEN_YD, CLIENT_ID_VK
 
 # client_id = 51843385
 # base_url = 'https://oauth.vk.com/authorize'
 
 
-
-
 # model = Model(TOKEN_VK, CLIENT_ID_VK, TOKEN_YD)
 
 app = Controller()
-view = app.window
-view.mainloop()
+app.window.mainloop()
 
 
-# # print('Все альбомы!')
-# model.vk_ld_all_albums()
+# print('Все альбомы!')
+# print(model.get_album_names())
+# pprint(model.albums)
+
 # # print('\nА теперь все фотографии!')
 # for album in model.albums:
 #     model.yd_upld_vk_phs(album_id=album)
@@ -30,7 +31,6 @@ view.mainloop()
 # model.yd_ld_resource_info()
 
 # model.yd_create_dir()
-
 
 
 # Файл get_token.py
