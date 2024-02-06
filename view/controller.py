@@ -10,7 +10,7 @@ class Controller():
         self.display = self.window.display_txt
         self.window.set_method_auth_pshbtn(self._connect_model_api)
         self.window.set_method_svd_pshbtn(self._save_photos)
-        # self.window.set_change_combox(self._set_ph_spin_box)
+        self.window.set_change_combox(self._set_ph_spin_box)
 
     def _connect_model_api(self, *args):
         if self.model is None:
@@ -18,7 +18,7 @@ class Controller():
                          self.window.get_vk_user_id(),
                          self.window.get_yd_token()]
             if all(auth_data):
-                model = Model(*auth_data)
+                model = Model(*auth_data, self)
                 self._check_model(model=model)
             else:
                 self.display('Заполнены не все поля для авторизации...')
@@ -47,8 +47,8 @@ class Controller():
 
     def _save_photos(self):
         album_name = self.window.get_album_name()
-        self.model
-        pass
+        num_of_photo = self.window.get_num_of_photos()
+        self.model.sv_ph_from_vk_albums(album_name, num_of_photo)
 
     def _set_albums_box(self, albums: list[str]):
         if 'Фото профиля' in albums:
@@ -57,8 +57,10 @@ class Controller():
             self.window.set_albums_box(albums, v_default=albums[0])
         self._set_ph_spin_box()
 
-    def _set_ph_spin_box(self):
+    def _set_ph_spin_box(self, *event):
         name = self.window.get_album_name()
-        values = list(map(str, range(1, self.model.album_names[name] + 1)))
+        values = list(range(1, self.model.album_names.get(name, 0) + 1))
+        if not values:
+            values.append(0)
         self.window.set_vlues_ph(values)
         

@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import END, ttk as tkttk
 from tkinter.scrolledtext import ScrolledText
 
+from security.get_token import TOKEN_VK, TOKEN_YD, CLIENT_ID_VK
 
 class MyWindow(tk.Tk):
 
@@ -16,13 +17,10 @@ class MyWindow(tk.Tk):
         self.geometry('800x600')
         self.title('Приложение резервного копирования фото с VK')
         self._distination = tk.StringVar(value="яндекс")
-        self._vk_user_id = tk.StringVar(value='')
-        self._vk_token = tk.StringVar(value='')
-        self._yd_token = tk.StringVar(value='')
-        self._album_in_box = tk.StringVar(value='')
-        self.__values_num_ph = ['5', 'ВСЕ']
-        self.__values_album = []
-        self._num_photo = tk.StringVar(value='5')
+        self.vk_user_id = tk.StringVar(value=CLIENT_ID_VK) # ''
+        self.vk_token = tk.StringVar(value=TOKEN_VK)   # ''
+        self.yd_token = tk.StringVar(value=TOKEN_YD)   # ''
+        self._value_album = tk.StringVar(value='')
         self._crt_btn_svd_photo()
         self._crt_btn_auth()
         self._crt_alb_combox()
@@ -40,28 +38,27 @@ class MyWindow(tk.Tk):
         self._crt_label_distinat()
         self._crt_radbtn_distinat_1()
         self._crt_text_editor()
-        # self.__crt_radbtn_distinat_2() # Пока не готово
 
     def display_txt(self, text: str):
         self._text_editor.insert(END, f'{text}\n')
 
     def get_vk_user_id(self):
-        return self._vk_user_id.get()
+        return self.vk_user_id.get()
 
     def get_vk_token(self):
-        return self._vk_token.get()
+        return self.vk_token.get()
 
     def get_yd_token(self):
-        return self._yd_token.get()
+        return self.yd_token.get()
 
     def set_albums_box(self, album_names: list[str], v_default=''):
-        self.__values_album = album_names
-        self._album_in_box.set(v_default)
+        self.__alb_box.configure(values=album_names)
+        self.__alb_box.set(v_default)
         print(album_names)
 
-    def set_vlues_ph(self, values: list[str]):
-        self.__values_num_ph = values
-        self._num_photo.set(value='5' if '5' in values else values[-1])
+    def set_vlues_ph(self, nums: list[str]):
+        self.__spinbox_photo.configure(values=nums)
+        self.__spinbox_photo.set(value=5 if 5 in nums else max(nums))
 
     def set_method_auth_pshbtn(self, __function):
         self.__btn_auth.config(command=__function)
@@ -70,10 +67,13 @@ class MyWindow(tk.Tk):
         self.__btn_svd_photo.config(command=__function)
 
     def get_album_name(self):
-        return self._album_in_box.get()
+        return self.__alb_box.get()
+    
+    def get_num_of_photos(self):
+        return self.__spinbox_photo.get()
 
-    # def set_change_combox(self, __finction):
-    #     self.__alb_box.bind("<<ComboboxSelected>>", __finction)
+    def set_change_combox(self, __finction):
+        self.__alb_box.bind("<<ComboboxSelected>>", __finction)
 
     def _set_grid(self):
         self.columnconfigure(index=1, weight=1)
@@ -109,9 +109,7 @@ class MyWindow(tk.Tk):
         self.__btn_svd_photo.grid(column=11, row=9, sticky='nsew', padx=10)
 
     def _crt_alb_combox(self):
-        self.__alb_box = tkttk.Combobox(
-            self, textvariable=self._album_in_box, values=self.__values_album
-        )
+        self.__alb_box = tkttk.Combobox(self)
         self.__alb_box.grid(column=1, row=7, columnspan=2, sticky='nwe',
                             padx=10)
 
@@ -134,10 +132,7 @@ class MyWindow(tk.Tk):
         self.__label_photo.grid(column=3, row=6, sticky='swe', padx=10)
 
     def _crt_spinbox_nums_ph(self):
-        self.__spinbox_photo = tkttk.Spinbox(
-            self, wrap=True, justify='center', values=self.__values_num_ph,
-            textvariable=self._num_photo
-        )
+        self.__spinbox_photo = tkttk.Spinbox(self, wrap=True, justify='center')
         self.__spinbox_photo.grid(column=3, row=7, sticky='wn', padx=10)
 
     def _crt_label_vk_user_id(self):
@@ -149,7 +144,7 @@ class MyWindow(tk.Tk):
                                      sticky='w', pady=5, padx=10)
 
     def _crt_entr_vk_id(self):
-        self.entr_vk_id = tkttk.Entry(self, textvariable=self._vk_user_id)
+        self.entr_vk_id = tkttk.Entry(self, textvariable=self.vk_user_id)
         self.entr_vk_id.grid(column=2, row=4, columnspan=2, sticky='we',
                              padx=10, pady=5)
 
@@ -162,7 +157,7 @@ class MyWindow(tk.Tk):
                                    sticky='ws', pady=5, padx=10)
 
     def _crt_entr_vk_token(self):
-        self.entr_vk_token = tk.Entry(self, textvariable=self._vk_token)
+        self.entr_vk_token = tk.Entry(self, textvariable=self.vk_token)
         self.entr_vk_token.grid(column=1, row=2, columnspan=11, sticky='new',
                                 padx=10, pady=5)
 
@@ -175,7 +170,7 @@ class MyWindow(tk.Tk):
                                    pady=10, padx=10)
 
     def _crt_entr_yd_token(self):
-        self.entr_yd_token = tkttk.Entry(self, textvariable=self._yd_token)
+        self.entr_yd_token = tkttk.Entry(self, textvariable=self.yd_token)
         self.entr_yd_token.grid(column=3, row=3, columnspan=9, sticky='ewn',
                                 padx=10, pady=10)
 
@@ -190,13 +185,6 @@ class MyWindow(tk.Tk):
                                                    variable=self._distination)
         self.radbtn_distinat_1.grid(column=7, row=7, columnspan=2,
                                     sticky='nwe', padx=10, pady=2)
-
-    def _crt_radbtn_distinat_2(self):
-        self.radbtn_distinat_2 = tkttk.Radiobutton(self, text='Google ДИСК',
-                                                   value='google',
-                                                   variable=self._distination)
-        self.radbtn_distinat_2.grid(column=9, row=8, columnspan=2,
-                                    sticky='nsew', padx=10, pady=10)
 
     def _crt_text_editor(self):
         self._text_editor = ScrolledText(self, height=10)

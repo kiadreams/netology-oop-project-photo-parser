@@ -67,7 +67,7 @@ class YDAPIClient():
         params = {'path': path, 'limit': limit}
         return requests.get(url, params=params, headers=self.headers).json()
 
-    def put_new_dir(self, path='/') -> dict:
+    def put_new_dir(self, path='/') -> tuple:
         url = f'{self.BASE_YD_URL}resources'
         params = {'path': path}
         resp = requests.put(url, params=params, headers=self.headers)
