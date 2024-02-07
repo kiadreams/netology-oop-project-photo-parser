@@ -1,6 +1,7 @@
+from textwrap import wrap
 import tkinter as tk
 
-from tkinter import END, ttk as tkttk
+from tkinter import DISABLED, END, ttk as tkttk
 from tkinter.scrolledtext import ScrolledText
 
 from security.get_token import TOKEN_VK, TOKEN_YD, CLIENT_ID_VK
@@ -20,7 +21,7 @@ class MyWindow(tk.Tk):
         self.vk_user_id = tk.StringVar(value=CLIENT_ID_VK) # ''
         self.vk_token = tk.StringVar(value=TOKEN_VK)   # ''
         self.yd_token = tk.StringVar(value=TOKEN_YD)   # ''
-        self._value_album = tk.StringVar(value='')
+        self.value_bar = tk.IntVar(value=0)
         self._crt_btn_svd_photo()
         self._crt_btn_auth()
         self._crt_alb_combox()
@@ -42,6 +43,9 @@ class MyWindow(tk.Tk):
     def display_txt(self, text: str):
         self._text_editor.insert(END, f'{text}\n')
 
+    def clear_display(self):
+        self._text_editor.delete('1.0', END)
+    
     def get_vk_user_id(self):
         return self.vk_user_id.get()
 
@@ -54,7 +58,6 @@ class MyWindow(tk.Tk):
     def set_albums_box(self, album_names: list[str], v_default=''):
         self.__alb_box.configure(values=album_names)
         self.__alb_box.set(v_default)
-        print(album_names)
 
     def set_vlues_ph(self, nums: list[str]):
         self.__spinbox_photo.configure(values=nums)
@@ -74,6 +77,14 @@ class MyWindow(tk.Tk):
 
     def set_change_combox(self, __finction):
         self.__alb_box.bind("<<ComboboxSelected>>", __finction)
+
+    def show_progress(self, start=True, step=False, interval=50):
+        if start and not step:
+            self.__progressbarr.start(interval)
+        elif step:
+            self.__progressbarr.step(interval)
+        else:
+            self.__progressbarr.stop()
 
     def _set_grid(self):
         self.columnconfigure(index=1, weight=1)
@@ -109,15 +120,14 @@ class MyWindow(tk.Tk):
         self.__btn_svd_photo.grid(column=11, row=9, sticky='nsew', padx=10)
 
     def _crt_alb_combox(self):
-        self.__alb_box = tkttk.Combobox(self)
+        self.__alb_box = tkttk.Combobox(self, state='readonly')
         self.__alb_box.grid(column=1, row=7, columnspan=2, sticky='nwe',
                             padx=10)
 
     def _crt_progressbar(self):
-        self.progressbarr = tkttk.Progressbar(self)
-        self.progressbarr.grid(column=1, row=9, sticky='ew',
-                               columnspan=10,
-                               padx=30, pady=1)
+        self.__progressbarr = tkttk.Progressbar(self)
+        self.__progressbarr.grid(column=1, row=9, sticky='ew', columnspan=10,
+                                 padx=30, pady=1)
 
     def _crt_label_album(self):
         self.__label_album = tkttk.Label(self, text='ВЫБЕРИТЕ АЛЬБОМ')
@@ -187,7 +197,7 @@ class MyWindow(tk.Tk):
                                     sticky='nwe', padx=10, pady=2)
 
     def _crt_text_editor(self):
-        self._text_editor = ScrolledText(self, height=10)
+        self._text_editor = ScrolledText(self, height=10, wrap='word')
         self._text_editor.grid(column=1, row=10, columnspan=11,
                                rowspan=2, sticky='nsew', padx=10, pady=5)
 

@@ -8,27 +8,26 @@ class Controller():
         self.model = None
         self.window = MyWindow()
         self.display = self.window.display_txt
+        self.progress = self.window.show_progress
         self.window.set_method_auth_pshbtn(self._connect_model_api)
         self.window.set_method_svd_pshbtn(self._save_photos)
         self.window.set_change_combox(self._set_ph_spin_box)
 
     def _connect_model_api(self, *args):
-        if self.model is None:
-            auth_data = [self.window.get_vk_token(),
-                         self.window.get_vk_user_id(),
-                         self.window.get_yd_token()]
-            if all(auth_data):
-                model = Model(*auth_data, self)
-                self._check_model(model=model)
-            else:
-                self.display('Заполнены не все поля для авторизации...')
+        auth_data = [self.window.get_vk_token(),
+                     self.window.get_vk_user_id(),
+                     self.window.get_yd_token()]
+        if all(auth_data):
+            model = Model(*auth_data, self)
+            self._check_model(model=model)
         else:
-            self.display('К сервисам VK и ЯДиска уже подключены!')
+            self.display('Заполнены не все поля для авторизации...')
 
     def _check_model(self, model: Model):
         vk_is_connect, yd_is_connect = model.checking_connect()
         if model.is_working:
             self.model = model
+            self.window.clear_display()
             self.display('Подключение к VK и ЯДиску установлено!')
             self._load_model_data()
         elif not vk_is_connect and not yd_is_connect:
@@ -46,9 +45,14 @@ class Controller():
             self.display('Альбомы не найдены!')
 
     def _save_photos(self):
-        album_name = self.window.get_album_name()
-        num_of_photo = self.window.get_num_of_photos()
-        self.model.sv_ph_from_vk_albums(album_name, num_of_photo)
+        if self.model is not None:
+            album_name = self.window.get_album_name()
+            num_of_photos = self.window.get_num_of_photos()
+            if self._data_is_correct(num_of_photos):
+                self.model.sv_ph_from_vk_albums(album_name,
+                                                int(num_of_photos))
+        else:
+            self.display('Сервисы не подключены...')
 
     def _set_albums_box(self, albums: list[str]):
         if 'Фото профиля' in albums:
@@ -59,8 +63,15 @@ class Controller():
 
     def _set_ph_spin_box(self, *event):
         name = self.window.get_album_name()
-        values = list(range(1, self.model.album_names.get(name, 0) + 1))
-        if not values:
-            values.append(0)
+        values = list(range(0, self.model.album_names.get(name, 0) + 1))
         self.window.set_vlues_ph(values)
-        
+
+    def _data_is_correct(self, num_of_photos: str) -> bool:
+        data_is_correct = False
+        if num_of_photos.isdigit() and int(num_of_photos) != 0:
+            data_is_correct = True
+        elif num_of_photos.isdigit():
+            self.display('Количество фотографий для копирования не задано...')
+        else:
+            self.display('Количество фотографий указано не целым числом...')
+        return data_is_correct
