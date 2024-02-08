@@ -8,10 +8,18 @@ class Controller():
         self.model = None
         self.window = MyWindow()
         self.display = self.window.display_txt
-        self.progress = self.window.show_progress
         self.window.set_method_auth_pshbtn(self._connect_model_api)
         self.window.set_method_svd_pshbtn(self._save_photos)
         self.window.set_change_combox(self._set_ph_spin_box)
+
+    def set_progress_bar(self):
+        self.window.set_progress_bar(self.model.progress[1] + 0.001)
+        self.window.value_bar.set(self.model.progress[0])
+        self.window.update_idletasks()
+
+    def make_step_progress(self):
+        self.window.value_bar.set(self.model.progress[0])
+        self.window.update_idletasks()
 
     def _connect_model_api(self, *args):
         auth_data = [self.window.get_vk_token(),
@@ -46,6 +54,7 @@ class Controller():
 
     def _save_photos(self):
         if self.model is not None:
+            self.window.clear_display()
             album_name = self.window.get_album_name()
             num_of_photos = self.window.get_num_of_photos()
             if self._data_is_correct(num_of_photos):

@@ -14,13 +14,14 @@ class Model():
                  controller=None) -> None:
         self.vk_api = VKAPIClient(token_vk, client_id_vk)
         self.yd_api = YDAPIClient(token_yd)
+        self.contr = controller
         self.is_working = False
-        self.disp = controller.display
-        self.progress = controller.progress
         self.albums = {}
         self.album_names = {}
         self.yd_folder = 'Копии фото VK'
         self.result_json_file = []
+        self.disp = self.contr.display
+        self.progress = [0, 0]
 
     def get_album_names(self):
         self._vk_ld_all_albums()
@@ -33,13 +34,13 @@ class Model():
         return list(self.album_names.keys())
 
     def sv_ph_from_vk_albums(self, album_name: str, num_photos: int):
-        num_all_photo = 0
+        self.progress = [0, 0]
+        self.progress[1] = self.__get_num_all_ph(num_photos, album_name)
+        self.contr.set_progress_bar()
         if album_name == 'ВСЕ АЛЬБОМЫ':
-            num_all_photo = self.__get_num_all_ph()
             for id, album in self.albums.items():
                 self.yd_upld_vk_phs(num_photos, album_id=id)
         else:
-            num_all_photo = self.__get_num_all_ph()
             id = self.__get_id_album(album_name)
             self.yd_upld_vk_phs(num_photos, album_id=id)
         if self.result_json_file:
@@ -53,9 +54,9 @@ class Model():
                 ph_url = ph_data.get('sizes', {}).get('url')
                 ph_size = ph_data.get('sizes', {}).get('type')
                 path_to_file = f'{path}{ph_name}'
-                operation = self.yd_api.post_upload_photo(path_to_file, ph_url)
-                print(operation)
-                print(f'Файл {ph_name} сохранен...')
+                self.yd_api.post_upload_photo(path_to_file, ph_url)
+                self._change_progress()
+                self.disp(f'Файл {ph_name} сохранен на ЯДиск...')
                 self.__add_record_to_json(ph_name, ph_size)
         else:
             self.disp('Не получилось загрузить фото с альбома!... '
@@ -65,6 +66,7 @@ class Model():
         photos = {}
         code, resp = self.vk_api.get_photos_from_album(album_id)
         if code == 200 and resp.get('response', {}):
+            self._change_progress()
             count = 0
             for item in resp.get('response', {}).get('items', []):
                 item['sizes'] = max(
@@ -73,10 +75,11 @@ class Model():
                 )
                 ph_name = self._get_file_name(item, photos)
                 photos.setdefault(ph_name, item)
-                pprint(photos)
                 count += 1
                 if count == num_photos:
                     break
+            self.disp(f'С альбома "{self.albums[album_id].get('title', '')}" '
+                      'на VK аккаунте загружены фотографии...')
         elif code == 200:
             pprint(resp)
         else:
@@ -110,6 +113,10 @@ class Model():
             self.is_working = True
         print(vk_is_connect, yd_is_connect)
         return vk_status, yd_status
+    
+    def _change_progress(self):
+        self.progress[0] += 1
+        self.contr.make_step_progress()
 
     def _yd_crt_fold_for_ph(self, album_id: int) -> str:
         path = ''
@@ -118,7 +125,7 @@ class Model():
         for p in [f'/{self.yd_folder}', f'/{name_album}', f'/{folder_name}']:
             path += p
             resp = self.yd_api.put_new_dir(path)
-            print(path, resp[0])
+            self._change_progress()
         return path + '/'
 
     def _yd_status_operation(self):
@@ -166,17 +173,16 @@ class Model():
         with open(json_file_name, 'w') as f_out:
             json.dump(self.result_json_file, f_out, ensure_ascii=False,
                       indent=2)
+        self.disp('Файл json с результатами работы сохранён в корневой '
+                  'папке программы!')
         self.result_json_file = []
     
-    def __get_num_all_ph(self, num_of_photos: int,
-                         is_all_albums=False,
-                         album_name=None) -> int:
+    def __get_num_all_ph(self, num_of_photos: int, album_name: str) -> int:
         num_all_photos = 0
-        if is_all_albums:
-            for sizes in self.album_names.values():
-                num_all_photos += min(sizes, num_of_photos)
+        if album_name =='ВСЕ АЛЬБОМЫ':
+            for size in self.album_names.values():
+                num_all_photos += min(size, num_of_photos) + 4
         else:
-            num_all_photos = self.album_names.get(album_name, 0)
+            album_size = self.album_names.get(album_name, 0)
+            num_all_photos += min(album_size, num_of_photos) + 4
         return num_all_photos
-            
-            

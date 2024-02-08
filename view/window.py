@@ -3,6 +3,7 @@ import tkinter as tk
 
 from tkinter import DISABLED, END, ttk as tkttk
 from tkinter.scrolledtext import ScrolledText
+from turtle import mode
 
 from security.get_token import TOKEN_VK, TOKEN_YD, CLIENT_ID_VK
 
@@ -43,8 +44,8 @@ class MyWindow(tk.Tk):
     def display_txt(self, text: str):
         self._text_editor.insert(END, f'{text}\n')
 
-    def clear_display(self):
-        self._text_editor.delete('1.0', END)
+    def clear_display(self, from_line=('1.0')):
+        self._text_editor.delete(from_line, END)
     
     def get_vk_user_id(self):
         return self.vk_user_id.get()
@@ -78,14 +79,12 @@ class MyWindow(tk.Tk):
     def set_change_combox(self, __finction):
         self.__alb_box.bind("<<ComboboxSelected>>", __finction)
 
-    def show_progress(self, start=True, step=False, interval=50):
-        if start and not step:
-            self.__progressbarr.start(interval)
-        elif step:
-            self.__progressbarr.step(interval)
-        else:
-            self.__progressbarr.stop()
+    def set_progress_bar(self, max_value):
+        self.__progressbarr.configure(maximum=max_value)
 
+    # def make_step_progress(self):
+    #     self.__progressbarr.step()
+    
     def _set_grid(self):
         self.columnconfigure(index=1, weight=1)
         self.columnconfigure(index=2, weight=1)
@@ -125,7 +124,8 @@ class MyWindow(tk.Tk):
                             padx=10)
 
     def _crt_progressbar(self):
-        self.__progressbarr = tkttk.Progressbar(self)
+        self.__progressbarr = tkttk.Progressbar(self, mode='determinate',
+                                                variable=self.value_bar)
         self.__progressbarr.grid(column=1, row=9, sticky='ew', columnspan=10,
                                  padx=30, pady=1)
 
@@ -205,6 +205,11 @@ class MyWindow(tk.Tk):
 if __name__ == '__main__':
     window = MyWindow()
 
+    
+    window.__btn_svd_photo.configure(
+        command=lambda:window.__progressbarr.start()
+    )
+    window.__progressbarr.configure(maximum=10)
     # window = tk.Tk()
     # window.title("Добро пожаловать в приложение PythonRu")
     # window.geometry('400x250')
