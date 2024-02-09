@@ -1,12 +1,6 @@
 import requests
 
-from urllib.parse import urlencode
 
-
-# https://<адрес-сервера>/method/<имя-API-метода>?<параметры>
-# api.vk.com
-# api.vk.ru
-# photos.get
 class VKAPIClient():
     BASE_VK_URL = 'https://api.vk.com/method/'
 
@@ -78,21 +72,3 @@ class YDAPIClient():
         params = {'path': path, 'url': file_url}
         resp = requests.post(url, params=params, headers=self.headers)
         return resp.status_code, resp.json()
-
-
-if __name__ == '__main__':
-
-    client_id = 51843385
-    base_url = 'https://oauth.vk.com/authorize'
-
-    def get_request_string(vk_url: str, app_id: int) -> str:
-        vk_params = {
-            'client_id': app_id,
-            'redirect_uri': 'https://oauth.vk.com/blank.html',
-            'display': 'page',
-            'scope': 6,
-            'response_type': 'token'
-        }
-        return f'{vk_url}?{urlencode(vk_params)}'
-
-    print(get_request_string(base_url, client_id))

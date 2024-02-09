@@ -81,9 +81,10 @@ class Model():
             self.disp(f'С альбома "{self.albums[album_id].get('title', '')}" '
                       'на VK аккаунте загружены фотографии...')
         elif code == 200:
-            pprint(resp)
+            self.disp('В ответ пришла ошибка загрузки фото, '
+                      'проверте введённые данные')
         else:
-            print(f'Запрос не удался, код ответа: {code}')
+            self.disp(f'Запрос не удался, код ответа: {code}')
         return photos
 
     def vk_sv_photo_to_file(self, photo_name: int, photos: dict):
@@ -92,13 +93,15 @@ class Model():
         if resp.status_code == 200:
             with open(f'{photo_name}.jpg', 'wb') as f:
                 f.write(resp.content)
-                print('файл записан')
+                self.disp('файл записан')
 
     def yd_ld_disk_info(self):
-        pprint(self.yd_api.get_disk_info())
+        resp = self.yd_api.get_disk_info()
+        return resp
 
     def yd_ld_resource_info(self, path='/', limit=20):
-        pprint(self.yd_api.get_info_recources(path, limit))
+        resp = self.yd_api.get_info_recources(path, limit)
+        return resp
 
     def yd_crt_dir(self, path: str) -> str:
         resp = self.yd_api.put_new_dir(path)
@@ -111,7 +114,6 @@ class Model():
         yd_status = yd_is_connect[0] == 200
         if vk_status and yd_status:
             self.is_working = True
-        print(vk_is_connect, yd_is_connect)
         return vk_status, yd_status
     
     def _change_progress(self):
@@ -150,11 +152,10 @@ class Model():
             for item in resp.get('response', {}).get('items', []):
                 album_id = item.get('id')
                 self.albums.setdefault(album_id, item)
-            # self.disp(self.albums)
         elif code == 200:
-            pprint(resp)
+            self.disp('В ответ на запрос - пришла ошбка!!!')
         else:
-            print(f'Запрос не удался, код ответа: {code}')
+            self.disp(f'Запрос не удался, код ответа: {code}')
 
     def __get_id_album(self, album_name: str) -> int:
         result_id = -6
@@ -177,12 +178,13 @@ class Model():
                   'папке программы!')
         self.result_json_file = []
     
-    def __get_num_all_ph(self, num_of_photos: int, album_name: str) -> int:
+    def __get_num_all_ph(self, num_phs: int, album_name: str) -> int:
         num_all_photos = 0
         if album_name =='ВСЕ АЛЬБОМЫ':
-            for size in self.album_names.values():
-                num_all_photos += min(size, num_of_photos) + 4
+            num_all_photos = sum([min(size, num_phs) + 4
+                                  for name, size in self.album_names.items()
+                                  if size != 0 and name != 'ВСЕ АЛЬБОМЫ'])
         else:
             album_size = self.album_names.get(album_name, 0)
-            num_all_photos += min(album_size, num_of_photos) + 4
+            num_all_photos += min(album_size, num_phs) + 4
         return num_all_photos

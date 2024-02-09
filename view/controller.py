@@ -15,11 +15,10 @@ class Controller():
     def set_progress_bar(self):
         self.window.set_progress_bar(self.model.progress[1] + 0.001)
         self.window.value_bar.set(self.model.progress[0])
-        self.window.update_idletasks()
 
     def make_step_progress(self):
         self.window.value_bar.set(self.model.progress[0])
-        self.window.update_idletasks()
+        self.window.update()
 
     def _connect_model_api(self, *args):
         auth_data = [self.window.get_vk_token(),
