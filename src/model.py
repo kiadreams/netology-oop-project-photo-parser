@@ -43,7 +43,7 @@ class Model():
         if self.result_json_file:
             self.__save_result_json_file()
     
-    def yd_upld_vk_phs(self, num_photos: int, album_id=-6):
+    def yd_upld_vk_phs(self, num_photos: int, album_id: int):
         photos = self.vk_ld_ph_from_alb(num_photos, album_id=album_id)
         if photos:
             path = self._yd_crt_fold_for_ph(album_id)
@@ -59,13 +59,16 @@ class Model():
         else:
             self.disp('Не получилось загрузить фото с альбома!... '
                       'Возможно их в нем нет...')
+            
+    def yd_upld_to_public(self, num_photos: int, album_id: int):
+        pass
 
     def vk_ld_ph_from_alb(self, num_photos: int, album_id=-6) -> dict:
         photos = {}
         code, resp = self.vk_api.get_photos_from_album(album_id)
+        self.progress['value'] += 1
+        self._change_progress()
         if code == 200 and resp.get('response', {}):
-            self.progress['value'] += 1
-            self._change_progress()
             count = 0
             for item in resp.get('response', {}).get('items', []):
                 item['sizes'] = max(
@@ -186,9 +189,9 @@ class Model():
     def __get_num_actions(self, num_phs: int, album_name: str) -> int:
         num_all_photos = 0
         if album_name =='ВСЕ АЛЬБОМЫ':
-            num_all_photos = sum([min(size, num_phs) + 4
+            num_all_photos = sum([(min(size, num_phs) + 4) if size else 1
                                   for name, size in self.album_names.items()
-                                  if size != 0 and name != 'ВСЕ АЛЬБОМЫ'])
+                                  if name != 'ВСЕ АЛЬБОМЫ'])
         else:
             album_size = self.album_names.get(album_name, 0)
             num_all_photos += min(album_size, num_phs) + 4

@@ -72,3 +72,9 @@ class YDAPIClient():
         params = {'path': path, 'url': file_url}
         resp = requests.post(url, params=params, headers=self.headers)
         return resp.status_code, resp.json()
+
+    def post_upload_public_ph(self, path: str, file_url:str) -> dict:
+        url = f'{self.BASE_YD_URL}/public/resources/save-to-disk'
+        params = {'path': path, 'url': file_url}
+        resp = requests.post(url, params=params, headers=self.headers)
+        return resp.status_code, resp.json()

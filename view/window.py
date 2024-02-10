@@ -20,7 +20,6 @@ class MyWindow(tk.Tk):
         self.__vk_token = tk.StringVar(value='')
         self.__yd_token = tk.StringVar(value='')
         self.__value_bar = tk.IntVar(value=0)
-        # self.__text_bar = tk.StringVar(value='Первоначальный элемент')
         # Application interface
         self.columnconfigure(index=1, weight=1)
         self.columnconfigure(index=2, weight=1)
@@ -176,11 +175,10 @@ class MyWindow(tk.Tk):
 
     def make_step_progressbarr(self, value: float):
         self.__value_bar.set(value)
-        self.update_idletasks()
 
     def set_text_bar(self, text=''):
         self.__config_text_prbar(text)
-        self.update_idletasks()
+        self.update()
 
     def __config_text_prbar(self, text: str):
         self.style_prbr.configure(
