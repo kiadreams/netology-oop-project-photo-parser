@@ -12,13 +12,13 @@ class Controller():
         self.window.set_method_svd_pshbtn(self._save_photos)
         self.window.set_change_combox(self._set_ph_spin_box)
 
-    def set_progress_bar(self):
-        self.window.set_progress_bar(self.model.progress[1] + 0.001)
-        self.window.value_bar.set(self.model.progress[0])
+    def set_progress_bar(self, max_value: int):
+        self.window.set_progress_bar(max_value + 0.001)
+        self.window.set_text_bar()
 
-    def make_step_progress(self):
-        self.window.value_bar.set(self.model.progress[0])
-        self.window.update()
+    def make_step_progress(self, value: int, text: str):
+        self.window.make_step_progressbarr(value)
+        self.window.set_text_bar(text)
 
     def _connect_model_api(self, *args):
         auth_data = [self.window.get_vk_token(),

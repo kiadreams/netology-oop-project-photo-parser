@@ -1,10 +1,7 @@
-from os import name
 import requests
 import json
 
 from datetime import datetime as dt
-from pprint import pprint
-
 from src.clients import VKAPIClient, YDAPIClient
 
 
@@ -21,7 +18,7 @@ class Model():
         self.yd_folder = 'Копии фото VK'
         self.result_json_file = []
         self.disp = self.contr.display
-        self.progress = [0, 0]
+        self.progress = {'max_value': 0, 'value': 0}
 
     def get_album_names(self):
         self._vk_ld_all_albums()
@@ -34,9 +31,9 @@ class Model():
         return list(self.album_names.keys())
 
     def sv_ph_from_vk_albums(self, album_name: str, num_photos: int):
-        self.progress = [0, 0]
-        self.progress[1] = self.__get_num_all_ph(num_photos, album_name)
-        self.contr.set_progress_bar()
+        all_actons = self.__get_num_actions(num_photos, album_name)
+        self.progress['max_value'] = all_actons
+        self.contr.set_progress_bar(self.progress['max_value'])
         if album_name == 'ВСЕ АЛЬБОМЫ':
             for id, album in self.albums.items():
                 self.yd_upld_vk_phs(num_photos, album_id=id)
@@ -55,6 +52,7 @@ class Model():
                 ph_size = ph_data.get('sizes', {}).get('type')
                 path_to_file = f'{path}{ph_name}'
                 self.yd_api.post_upload_photo(path_to_file, ph_url)
+                self.progress['value'] += 1
                 self._change_progress()
                 self.disp(f'Файл {ph_name} сохранен на ЯДиск...')
                 self.__add_record_to_json(ph_name, ph_size)
@@ -66,6 +64,7 @@ class Model():
         photos = {}
         code, resp = self.vk_api.get_photos_from_album(album_id)
         if code == 200 and resp.get('response', {}):
+            self.progress['value'] += 1
             self._change_progress()
             count = 0
             for item in resp.get('response', {}).get('items', []):
@@ -116,9 +115,13 @@ class Model():
             self.is_working = True
         return vk_status, yd_status
     
-    def _change_progress(self):
-        self.progress[0] += 1
-        self.contr.make_step_progress()
+    def _change_progress(self, text=None):
+        if text is None:
+            percent = int(
+                (self.progress['value'] / self.progress['max_value'] * 100)
+            )
+            text = f'{percent}%' if percent != 100 else f'фотографии сохранены'
+        self.contr.make_step_progress(self.progress['value'], text)
 
     def _yd_crt_fold_for_ph(self, album_id: int) -> str:
         path = ''
@@ -127,6 +130,7 @@ class Model():
         for p in [f'/{self.yd_folder}', f'/{name_album}', f'/{folder_name}']:
             path += p
             resp = self.yd_api.put_new_dir(path)
+            self.progress['value'] += 1
             self._change_progress()
         return path + '/'
 
@@ -177,8 +181,9 @@ class Model():
         self.disp('Файл json с результатами работы сохранён в корневой '
                   'папке программы!')
         self.result_json_file = []
+        self.progress['value'] = 0
     
-    def __get_num_all_ph(self, num_phs: int, album_name: str) -> int:
+    def __get_num_actions(self, num_phs: int, album_name: str) -> int:
         num_all_photos = 0
         if album_name =='ВСЕ АЛЬБОМЫ':
             num_all_photos = sum([min(size, num_phs) + 4
